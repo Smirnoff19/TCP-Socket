@@ -1,0 +1,3 @@
+﻿  Client.cpp
+C:\Users\USER\Desktop\test\Client\Client\Client.cpp(24,23): warning C4244: инициализация: преобразование "uintmax_t" в "int", возможна потеря данных
+  Client.vcxproj -> C:\Users\USER\Desktop\test\Client\Debug\Client.exe

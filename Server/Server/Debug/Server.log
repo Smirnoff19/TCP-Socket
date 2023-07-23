@@ -1,0 +1,3 @@
+﻿  Server.cpp
+C:\Users\USER\Desktop\test\Server\Server\Server.cpp(31,23): warning C4244: инициализация: преобразование "uintmax_t" в "int", возможна потеря данных
+  Server.vcxproj -> C:\Users\USER\Desktop\test\Server\Debug\Server.exe
