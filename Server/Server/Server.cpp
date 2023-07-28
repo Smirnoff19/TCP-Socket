@@ -51,20 +51,17 @@ void send_file(SOCKET clientSocket, const std::string& filePath) {
 }
 
 void receive_file(SOCKET serverSocket) {
-    char file_size_str[16];
     char file_name[32];
 
     clock_t t1;
     recv(serverSocket, reinterpret_cast<char*>(&t1), sizeof(t1), 0);
-    /*std::cout << t1 << std::endl*/;
-    recv(serverSocket, file_size_str, 16, 0);
-    int file_size = atoi(file_size_str);
-    char* bytes = new char[file_size];
+
+    int file_size;
+    recv(serverSocket, reinterpret_cast<char*>(&file_size), sizeof(file_size), 0); // Получение размера файла в двоичном формате
 
     recv(serverSocket, file_name, 32, 0);
 
-    std::fstream file;
-    file.open(file_name, std::ios_base::out | std::ios_base::binary);
+    std::ofstream file(file_name, std::ios::binary);
 
     std::cout << "size: " << file_size << std::endl;
     std::cout << "name: " << file_name << std::endl;
@@ -72,14 +69,21 @@ void receive_file(SOCKET serverSocket) {
     if (file.is_open()) {
         clock_t t4;
         recv(serverSocket, reinterpret_cast<char*>(&t4), sizeof(t4), 0);
-        /* std::cout << t4 << std::endl;*/
 
-        recv(serverSocket, bytes, file_size, 0);
+        char* bytes = new char[file_size];
+        int bytesReceived = 0;
+        int totalBytesReceived = 0;
 
-        std::cout << "data: " << bytes << std::endl;
+        while (totalBytesReceived < file_size &&
+            (bytesReceived = recv(serverSocket, bytes + totalBytesReceived, file_size - totalBytesReceived, 0)) > 0)
+        {
+            totalBytesReceived += bytesReceived;
+        }
 
         file.write(bytes, file_size);
         std::cout << "ok file save\n";
+
+        delete[] bytes;
 
         clock_t tend = clock();
 
@@ -88,17 +92,17 @@ void receive_file(SOCKET serverSocket) {
 
         clock_t Znac_c = tend - t4;
         double Znach = static_cast<double>(Znac_c) / CLOCKS_PER_SEC;
-        /*float TotalTime = static_cast<float>(tend - t1) / CLOCKS_PER_SEC;
-        float Znach = static_cast<float>(tend - t4) / CLOCKS_PER_SEC;*/
 
         std::cout << "Общее время :" << TotallTime << std::endl;
         std::cout << "Время с момента передачи буфера до момента принятия в директорию :" << Znach << std::endl;
     }
-    else
+    else {
         std::cout << "Error file open\n";
-    delete[] bytes;
+    }
+
     file.close();
 }
+
 
 // Функция для удаления клиента из списка
 void removeClient(SOCKET clientSocket)
