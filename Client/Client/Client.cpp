@@ -8,42 +8,46 @@
 #include <thread>
 #include<fstream>
 #include <ctime>
+#include <iphlpapi.h>
+
 #include <experimental/filesystem>
 #pragma warning(disable:4996)
 
+
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "IPHLPAPI.lib")
 void send_file(SOCKET serverSocket, const std::string& filePath) {
     clock_t t1 = clock();
     send(serverSocket, reinterpret_cast<const char*>(&t1), sizeof(t1), 0);
-    /*std::cout << t1 << std::endl;*/
+
     std::fstream file;
     file.open(filePath, std::ios_base::in | std::ios_base::binary);
 
     if (file.is_open()) {
-
-        int file_size = std::experimental::filesystem::file_size(filePath) + 1;
+        file.seekg(0, std::ios::end);
+        int file_size = file.tellg(); // Получение размера файла
+        file.seekg(0, std::ios::beg);
 
         char* bytes = new char[file_size];
 
         file.read(bytes, file_size);
-        std::cout << "Путь к файлу: " << filePath << std::endl;
 
+        std::cout << "Путь к файлу: " << filePath << std::endl;
         std::cout << "size: " << file_size << std::endl;
         std::cout << "name: " << filePath << std::endl;
-        std::cout << "data: " << bytes << std::endl;
 
-        send(serverSocket, std::to_string(file_size).c_str(), 16, 0);
+        send(serverSocket, reinterpret_cast<const char*>(&file_size), sizeof(file_size), 0); // Отправка размера файла
         send(serverSocket, filePath.c_str(), 32, 0);
         clock_t t4 = clock();
         send(serverSocket, reinterpret_cast<const char*>(&t4), sizeof(t4), 0);
-        /*std::cout << t4 << std::endl;*/
         send(serverSocket, bytes, file_size, 0);
 
         delete[] bytes;
 
     }
-    else
-        std::cout << "Ошибка открытия файла: " << filePath << std::endl;;
+    else {
+        std::cout << "Ошибка открытия файла: " << filePath << std::endl;
+    }
 
     file.close();
 }
@@ -134,6 +138,9 @@ int main()
         WSACleanup();
         return -1;
     }*/
+
+
+
     // Установка соединения с сервером
     if (connect(clientSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) == SOCKET_ERROR)
     {
